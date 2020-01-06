@@ -1,0 +1,9 @@
+{
+    "blurImage": "True", 
+    "blurKernelSize": "(7,7)", 
+    "edgingLowThresh": [20, 30],
+    "edgingHighThresh": [30,100],
+    "selectTransform": 1,
+    "dilateIteration": 1,
+    "erodeIteration": 1
+}
