@@ -6,6 +6,19 @@ import imutils
 from imutils import contours
 import numpy as np
 
+def largest_from_array(contours, count):
+    largest = []
+    for x in range(count):
+        max_size = 0
+        for i,c in enumerate(contours):
+            size = cv2.contourArea(c)
+            if max_size < size:
+                max_size = size
+                max_index = i
+        largest.append(contours[max_index])
+        contours = np.delete(contours,max_index,0)
+    return largest, max_index
+
 def contour(image, settings, detect_largest=1):
 
     im = image.copy()
@@ -48,12 +61,8 @@ def contour(image, settings, detect_largest=1):
 
     (cnts, _) = contours.sort_contours(cnts)
 
-    tmp = cnts
-    for i in range(detect_largest):
-        cnt, index = largest_from_array(tmp)
-        #must delete from array for next round
-        tmp = np.delete(tmp,index,0)
-        cv2.drawContours(image, tmp, -1, (0,255,0), 3)    
+    largest, index = largest_from_array(tmp,detect_largest)
+    cv2.drawContours(image, largest, -1, (0,255,0), 3)    
 
     cv2.drawContours(image, cnts, -1, (0,255,0), 1)    
 
@@ -70,7 +79,7 @@ def cmdline_args():
                     help= "Use jetson interfaced with picam V2")
     p.add_argument("--resolution","-r", type=str, default="low", 
                     help="Resolution can be max, high, medium, or low.")
-    p.add_argument("--detect-largest","-L", type=int, default=1
+    p.add_argument("--detect-largest","-L", type=int, default=1,
                     help="Detect largest N number of contours")
 
     return(p.parse_args())
@@ -100,7 +109,7 @@ if __name__ == '__main__':
         
         img,trfm = contour(frame, settings, args.detect_largest)
 
-        dbg = cv2.resize(dbg, (0, 0), None, .25, .25)
+        dbg = cv2.resize(trfm, (0, 0), None, .25, .25)
         # live_contour = np.concatenate((dbg,img),axis=1)
         cv2.imshow('Contour', img)
         cv2.imshow('Transform',dbg)
