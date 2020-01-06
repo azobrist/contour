@@ -7,7 +7,10 @@ import imutils
 from imutils import contours
 import numpy as np
 
-def distance_points(point1,point2):
+def midpoint(ptA, ptB):
+    return ((ptA[0] + ptB[0]) * 0.5, (ptA[1] + ptB[1]) * 0.5)
+
+def euclidean_distance(point1,point2):
     x1,y1 = point1
     x2,y2 = point2
     return math.sqrt(math.pow(x2-x1,2)+math.pow(y2-y1,2))
@@ -31,7 +34,7 @@ def valid_seperation(cnts, target, seperation):
         return False
     for i,c in enumerate(cnts):
         c2 = center_of_contour(c)
-        dist = distance_points(c1,c2)
+        dist = euclidean_distance(c1,c2)
         if dist < seperation:
             return False
     return True
@@ -93,6 +96,61 @@ def label_contours(image,cnts,show_sizes=False):
                     0.65, (255, 255, 255), 2)
         except:
             print("contour not segmented correctly: label {0} skipped".format(i))
+    return image
+
+def bound_contour(image, contour):
+    x,y,w,h = cv2.boundingRect(contour)
+    cv2.rectangle(image, (x,y), (x+w,y+h), (0,255,0),2)
+
+    # unpack the ordered bounding box, then compute the midpoint
+    # between the top-left and top-right coordinates, followed by
+    # the midpoint between bottom-left and bottom-right coordinates
+    tl = (x,y)
+    tr = (x+w,y)
+    bl = (x,y+h)
+    br = (x+w,y+h)
+
+    (tltrX, tltrY) = midpoint(tl, tr)
+    (blbrX, blbrY) = midpoint(bl, br)
+
+    # compute the midpoint between the top-left and top-right points,
+    # followed by the midpoint between the top-righ and bottom-right
+    (tlblX, tlblY) = midpoint(tl, bl)
+    (trbrX, trbrY) = midpoint(tr, br)
+
+    # draw the midpoints on the image
+    cv2.circle(image, (int(tltrX), int(tltrY)), 5, (255, 0, 0), -1)
+    cv2.circle(image, (int(blbrX), int(blbrY)), 5, (255, 0, 0), -1)
+    cv2.circle(image, (int(tlblX), int(tlblY)), 5, (255, 0, 0), -1)
+    cv2.circle(image, (int(trbrX), int(trbrY)), 5, (255, 0, 0), -1)
+
+    # draw lines between the midpoints
+    cv2.line(image, (int(tltrX), int(tltrY)), (int(blbrX), int(blbrY)),
+        (255, 0, 255), 2)
+    cv2.line(image, (int(tlblX), int(tlblY)), (int(trbrX), int(trbrY)),
+        (255, 0, 255), 2)
+
+    # compute the Euclidean distance between the midpoints
+    dA = euclidean_distance((tltrX, tltrY), (blbrX, blbrY))
+    dB = euclidean_distance((tlblX, tlblY), (trbrX, trbrY))
+
+    cv2.putText(image, "{:.2f}px".format(dA),
+            (int(tltrX - 15), int(tltrY - 10)), cv2.FONT_HERSHEY_SIMPLEX,
+            0.65, (255, 255, 255), 2)
+    cv2.putText(image, "{:.2f}px".format(dB),
+            (int(trbrX + 10), int(trbrY)), cv2.FONT_HERSHEY_SIMPLEX,
+            0.65, (255, 255, 255), 2)
+    
+    return image
+
+def measure_contours(image,cnts, bounding_box):
+    #bounding box not selected
+    if bounding_box == 0:
+        return
+
+    for i,c in enumerate(cnts):
+        image = bound_contour(image, c)
+        
     return image
 
 def contour(image, settings):
@@ -167,6 +225,8 @@ def cmdline_args():
                     help="Detect all areas of contours in range(-R x y)")
     p.add_argument("--pixel_seperation","-p", type=int, default=0,
                     help="May need to seperate detected contour centers by pixel")
+    p.add_argument("--bounding-box","-b", type=float, default=0, nargs='?',
+                    help="draw non-rotating bounding box around detected contours, annotated known y metric for display")
 
     return(p.parse_args())
 
@@ -205,14 +265,17 @@ if __name__ == '__main__':
         if args.detect_largest:
             largest = largest_from_array(cnts,args.detect_count, seperation)
             out = label_contours(out,largest, args.show_size)
+            out = measure_contours(out,largest, args.bounding_box)
 
         if args.detect_closest != 0:
             closest = closest_from_array(cnts, args.detect_closest, args.detect_count, seperation)
             out = label_contours(out,closest, args.show_size)
+            out = measure_contours(out,closest, args.bounding_box)
 
         if args.detect_range != None:
             inRange = range_from_array(cnts, args.detect_range, seperation)
             out = label_contours(out, inRange, args.show_size)
+            out = measure_contours(out,inRange, args.bounding_box)
 
         dbg = cv2.resize(trfm, (0, 0), None, .25, .25)
         # live_contour = np.concatenate((dbg,img),axis=1)
