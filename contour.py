@@ -302,7 +302,7 @@ if __name__ == '__main__':
             out = measure_contours(out,inRange, args.bounding_box, args.measure_from_lens)
 
         h,w,_ = out.shape
-        cv2.putText(latest, "Res:{0}x{1}".format(w,h),
+        cv2.putText(out, "Res:{0}x{1}".format(w,h),
             (10, 20), cv2.FONT_HERSHEY_SIMPLEX,
             0.65, (255, 255, 255), 2)
 
