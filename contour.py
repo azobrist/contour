@@ -154,7 +154,7 @@ def calc_distance_from_lens(image, pixel_array):
         height = pixel_conversion_factor - (object_actual_dimension/p)
         height = height * resolution_factor
         cv2.putText(image, "Height#{0}: {1:0.2f}".format(i,height),
-                    (int(res[0])-50,80+30*i), cv2.FONT_HERSHEY_SIMPLEX,
+                    (int(res[0])-200,80+30*i), cv2.FONT_HERSHEY_SIMPLEX,
                     0.65, (255, 255, 255), 2)
 
     return image
@@ -300,6 +300,11 @@ if __name__ == '__main__':
             inRange = range_from_array(cnts, args.detect_range, seperation)
             out = label_contours(out, inRange, args.show_size)
             out = measure_contours(out,inRange, args.bounding_box, args.measure_from_lens)
+
+        h,w,_ = out.shape
+        cv2.putText(latest, "Res:{0}x{1}".format(w,h),
+            (10, 20), cv2.FONT_HERSHEY_SIMPLEX,
+            0.65, (255, 255, 255), 2)
 
         dbg = cv2.resize(trfm, (0, 0), None, .25, .25)
         # live_contour = np.concatenate((dbg,img),axis=1)
