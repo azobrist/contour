@@ -38,7 +38,8 @@ def valid_seperation(cnts, target, seperation):
 
 def largest_from_array(cnts, count, seperation):
     largest = []
-    for x in range(count):
+    attempts = 0
+    while len(largest) < count and attempts < 10:
         max_size = 0
         for i,c in enumerate(cnts):
             size = cv2.contourArea(c)
@@ -49,11 +50,13 @@ def largest_from_array(cnts, count, seperation):
             largest.append(cnts[max_index])
         #else don't append and delete contour
         cnts = np.delete(cnts,max_index,0)
+        attempts += 1
     return largest
 
 def closest_from_array(cnts, area_to_match, count, seperation):
     closest = []
-    for x in range(count):
+    attempts = 0
+    while len(closest) < count and attempts < 10:
         #some large number
         max_area=0xffffffff
         for i,c in enumerate(cnts):
@@ -67,6 +70,7 @@ def closest_from_array(cnts, area_to_match, count, seperation):
             closest.append(cnts[diff_index])
         #else don't append and delete contour
         cnts = np.delete(cnts,diff_index,0)
+        attempts += 1
     return closest
 
 def range_from_array(cnts, rangeXtoY, seperation):
