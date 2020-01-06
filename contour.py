@@ -226,6 +226,8 @@ def cmdline_args():
     
     p.add_argument("--use_jetson","-j", action="store_true",
                     help= "Use jetson interfaced with picam V2")
+    p.add_argument("--use_jetson_usb","-u", action="store_true",
+                    help= "Use jetson interfaced with usb camera")
     p.add_argument("--reset-config", action="store_true", default=False,
                     help="Reset contour config options using .original file")
     p.add_argument("--snap-shot","-ss", action="store_true", default=False,
