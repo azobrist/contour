@@ -19,7 +19,7 @@ def largest_from_array(contours, count):
         contours = np.delete(contours,max_index,0)
     return largest, max_index
 
-def contour(image, settings, detect_largest=1):
+def contour(image, settings, detect_largest):
 
     im = image.copy()
     if settings['blurImage'] == True:
@@ -61,9 +61,6 @@ def contour(image, settings, detect_largest=1):
 
     (cnts, _) = contours.sort_contours(cnts)
 
-    largest, index = largest_from_array(cnts,detect_largest)
-    cv2.drawContours(image, largest, -1, (0,255,0), 3)    
-
     cv2.drawContours(image, cnts, -1, (0,255,0), 1)    
 
     return cnts, image, full_transform
@@ -79,7 +76,7 @@ def cmdline_args():
                     help= "Use jetson interfaced with picam V2")
     p.add_argument("--resolution","-r", type=str, default="low", 
                     help="Resolution can be max, high, medium, or low.")
-    p.add_argument("--detect-largest","-L", type=int, default=1,
+    p.add_argument("--detect-largest","-L", type=int, default=0,
                     help="Detect largest N number of contours")
 
     return(p.parse_args())
@@ -108,6 +105,10 @@ if __name__ == '__main__':
         ret, frame = cam.read()
         
         img,trfm = contour(frame, settings, args.detect_largest)
+
+        if args.detect_largest != 0:
+            largest, index = largest_from_array(cnts,args.detect_largest)
+            cv2.drawContours(img, largest, -1, (0,255,0), 3)   
 
         dbg = cv2.resize(trfm, (0, 0), None, .25, .25)
         # live_contour = np.concatenate((dbg,img),axis=1)
