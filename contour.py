@@ -75,11 +75,11 @@ if __name__ == '__main__':
         
     args = cmdline_args()
 
-    settings_file = ".settings"
+    settings_file = ".contour.json"
     with open(settings_file, 'r') as f:
         settings = json.load(f)
 
-    res = resolution[args.resolution]
+    res = resolutions[args.resolution]
     if args.use_jetson == True:
         cam = cv2.VideoCapture(gstreamer_pipeline(res[0],res[1],res[0],res[1]))
     else:
@@ -87,7 +87,7 @@ if __name__ == '__main__':
 
     while(True):
         # Capture frame-by-frame
-        ret, frame = cap.read()
+        ret, frame = cam.read()
         
         img,dbg = contour(frame, settings)
         
@@ -100,7 +100,7 @@ if __name__ == '__main__':
             break
 
     # When everything done, release the capture
-    cap.release()
+    cam.release()
     cv2.destroyAllWindows()
 
     

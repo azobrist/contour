@@ -1,4 +1,4 @@
-
+import numpy as np
 
 max_picam_resolution = (3240,2464)
 resolutions = { "max": max_picam_resolution, 
