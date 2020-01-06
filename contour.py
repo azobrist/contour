@@ -82,10 +82,15 @@ def range_from_array(cnts, rangeXtoY, seperation):
                 inRange.append(c)
     return inRange
 
-def label_contours(image,cnts):
+def label_contours(image,cnts,show_sizes=False):
     for i,c in enumerate(cnts):
         try:
             contours.label_contour(image, c, i)
+            if show_sizes:
+                size = cv2.contourArea(c)
+                cv2.putText(image, "Size #{0}:{1}".format(i,size),
+                    (10,80+30*i), cv2.FONT_HERSHEY_SIMPLEX,
+                    0.65, (255, 255, 255), 2)
         except:
             print("contour not segmented correctly: label {0} skipped".format(i))
     return image
@@ -150,6 +155,8 @@ def cmdline_args():
                     help="Resolution can be max, high, medium, or low.")
     p.add_argument("--show-all","-a", action="store_true", default=False,
                     help="Show all contours in processed image output")
+    p.add_argument("--show-size","-s", action="store_true", default=False,
+                    help="Show sizes of detected contours")
     p.add_argument("--detect-count","-N", type=int, default=1,
                     help="Select N number of contours to detect")
     p.add_argument("--detect-largest","-L", action="store_true", default=False,
@@ -158,7 +165,7 @@ def cmdline_args():
                     help="Detect closest to area X of -N number of contour areas")
     p.add_argument("--detect-range","-R", type=int, nargs=2,
                     help="Detect all areas of contours in range(-R x y)")
-    p.add_argument("--pixel_seperation","-s", type=int, default=0,
+    p.add_argument("--pixel_seperation","-p", type=int, default=0,
                     help="May need to seperate detected contour centers by pixel")
 
     return(p.parse_args())
@@ -197,15 +204,15 @@ if __name__ == '__main__':
 
         if args.detect_largest:
             largest = largest_from_array(cnts,args.detect_count, seperation)
-            out = label_contours(out,largest)
+            out = label_contours(out,largest, args.show_size)
 
         if args.detect_closest != 0:
             closest = closest_from_array(cnts, args.detect_closest, args.detect_count, seperation)
-            out = label_contours(out,closest)
+            out = label_contours(out,closest, args.show_size)
 
         if args.detect_range != None:
             inRange = range_from_array(cnts, args.detect_range, seperation)
-            out = label_contours(out, inRange)
+            out = label_contours(out, inRange, args.show_size)
 
         dbg = cv2.resize(trfm, (0, 0), None, .25, .25)
         # live_contour = np.concatenate((dbg,img),axis=1)
