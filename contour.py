@@ -228,6 +228,8 @@ def cmdline_args():
                     help= "Use jetson interfaced with picam V2")
     p.add_argument("--reset-config", action="store_true", default=False,
                     help="Reset contour config options using .original file")
+    p.add_argument("--snap-shot","-ss", action="store_true", default=False,
+                    help="Take a snap shot and save it to file")
     p.add_argument("--resolution","-r", type=str, default="low", 
                     help="Resolution can be max, high, medium, or low.")
     p.add_argument("--show-all","-a", action="store_true", default=False,
@@ -319,10 +321,15 @@ if __name__ == '__main__':
             (10, 20), cv2.FONT_HERSHEY_SIMPLEX,
             0.65, (255, 255, 255), 2)
 
-        dbg = cv2.resize(trfm, (0, 0), None, .25, .25)
-        # live_contour = np.concatenate((dbg,img),axis=1)
-        cv2.imshow('Contour', out)
-        cv2.imshow('Transform',dbg)
+        if args.snap_shot:
+            cv2.imwrite('out.jpg',out)
+            cv2.imwrite('trfm.jpg',trfm)
+            break
+        else:
+            dbg = cv2.resize(trfm, (0, 0), None, .25, .25)
+            # live_contour = np.concatenate((dbg,img),axis=1)
+            cv2.imshow('Contour', out)
+            cv2.imshow('Transform',dbg)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
