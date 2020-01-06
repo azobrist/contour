@@ -45,7 +45,10 @@ def range_from_array(cnts, rangeXtoY):
 
 def label_contours(image,cnts):
     for i,c in enumerate(cnts):
-        contours.label_contour(image, c, i)
+        try:
+            contours.label_contour(image, c, i)
+        except:
+            print("zero spatial moment used as divisor: label {0} skipped".format(i))
     return image
 
 def contour(image, settings):
