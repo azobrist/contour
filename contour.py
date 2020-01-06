@@ -6,7 +6,7 @@ import imutils
 from imutils import contours
 import numpy as np
 
-def contour(image, settings):
+def contour(image, settings, detect_largest=1):
 
     im = image.copy()
     if settings['blurImage'] == True:
@@ -48,9 +48,16 @@ def contour(image, settings):
 
     (cnts, _) = contours.sort_contours(cnts)
 
+    tmp = cnts
+    for i in range(detect_largest):
+        cnt, index = largest_from_array(tmp)
+        #must delete from array for next round
+        tmp = np.delete(tmp,index,0)
+        cv2.drawContours(image, tmp, -1, (0,255,0), 3)    
+
     cv2.drawContours(image, cnts, -1, (0,255,0), 1)    
 
-    return image, full_transform
+    return cnts, image, full_transform
 
 def cmdline_args():
     # Make parser object
@@ -63,6 +70,8 @@ def cmdline_args():
                     help= "Use jetson interfaced with picam V2")
     p.add_argument("--resolution","-r", type=str, default="low", 
                     help="Resolution can be max, high, medium, or low.")
+    p.add_argument("--detect-largest","-L", type=int, default=1
+                    help="Detect largest N number of contours")
 
     return(p.parse_args())
 
@@ -89,8 +98,8 @@ if __name__ == '__main__':
         # Capture frame-by-frame
         ret, frame = cam.read()
         
-        img,dbg = contour(frame, settings)
-        
+        img,trfm = contour(frame, settings, args.detect_largest)
+
         dbg = cv2.resize(dbg, (0, 0), None, .25, .25)
         # live_contour = np.concatenate((dbg,img),axis=1)
         cv2.imshow('Contour', img)
