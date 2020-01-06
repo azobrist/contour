@@ -278,7 +278,7 @@ if __name__ == '__main__':
     if args.use_jetson == True:
         cam = cv2.VideoCapture(gstreamer_pipeline(display_width=res[0],display_height=res[1]), cv2.CAP_GSTREAMER)
     elif args.ust_jetson_usb == True:
-        cam = cv2.VideoCapture(device='/dev/video2')
+        cam = cv2.VideoCapture(device='/dev/video1')
     else:
         cam = cv2.VideoCapture(0)
 
