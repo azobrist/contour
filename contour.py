@@ -2,11 +2,41 @@ import sys
 import json
 import argparse
 import cv2
+import math
 import imutils
 from imutils import contours
 import numpy as np
 
-def largest_from_array(cnts, count):
+def distance_points(point1,point2):
+    x1,y1 = point1
+    x2,y2 = point2
+    return math.sqrt(math.pow(x2-x1,2)+math.pow(y2-y1,2))
+
+def center_of_contour(contour):
+    m = cv2.moments(contour)
+    if m["m00"] != 0:
+        cX = int(m["m10"] / m["m00"])
+        cY = int(m["m01"] / m["m00"])
+        return [cX,cY]
+    else:
+        return [0,0]
+
+def valid_seperation(cnts, target, seperation):
+    #if first contour, return
+    if len(cnts) == 0:
+        return True
+    c1 = center_of_contour(target)
+    #need to vet each potential target for incomplete segmentation
+    if c1 == [0,0]:
+        return False
+    for i,c in enumerate(cnts):
+        c2 = center_of_contour(c)
+        dist = distance_points(c1,c2)
+        if dist < seperation:
+            return False
+    return True
+
+def largest_from_array(cnts, count, seperation):
     largest = []
     for x in range(count):
         max_size = 0
@@ -15,11 +45,13 @@ def largest_from_array(cnts, count):
             if max_size < size:
                 max_size = size
                 max_index = i
-        largest.append(cnts[max_index])
+        if valid_seperation(largest, cnts[max_index], seperation):
+            largest.append(cnts[max_index])
+        #else don't append and delete contour
         cnts = np.delete(cnts,max_index,0)
     return largest
 
-def closest_from_array(cnts, area_to_match, count):
+def closest_from_array(cnts, area_to_match, count, seperation):
     closest = []
     for x in range(count):
         #some large number
@@ -31,16 +63,19 @@ def closest_from_array(cnts, area_to_match, count):
             if max_area > diff:
                 max_area = diff
                 diff_index = i
-        closest.append(cnts[diff_index])
+        if valid_seperation(closest, cnts[diff_index], seperation):
+            closest.append(cnts[diff_index])
+        #else don't append and delete contour
         cnts = np.delete(cnts,diff_index,0)
     return closest
 
-def range_from_array(cnts, rangeXtoY):
+def range_from_array(cnts, rangeXtoY, seperation):
     inRange = []
     for i,c in enumerate(cnts):
         size = cv2.contourArea(c)
         if size >= rangeXtoY[0] and size <= rangeXtoY[1]:
-            inRange.append(c)
+            if valid_seperation(inRange, c, seperation):
+                inRange.append(c)
     return inRange
 
 def label_contours(image,cnts):
@@ -48,7 +83,7 @@ def label_contours(image,cnts):
         try:
             contours.label_contour(image, c, i)
         except:
-            print("zero spatial moment used as divisor: label {0} skipped".format(i))
+            print("contour not segmented correctly: label {0} skipped".format(i))
     return image
 
 def contour(image, settings):
@@ -119,6 +154,8 @@ def cmdline_args():
                     help="Detect closest to area X of -N number of contour areas")
     p.add_argument("--detect-range","-R", type=int, nargs=2,
                     help="Detect all areas of contours in range(-R x y)")
+    p.add_argument("--pixel_seperation","-s", type=int, default=0,
+                    help="May need to seperate detected contour centers by pixel")
 
     return(p.parse_args())
 
@@ -141,6 +178,8 @@ if __name__ == '__main__':
     else:
         cam = cv2.VideoCapture(0)
 
+    seperation = args.pixel_seperation
+
     while(True):
         # Capture frame-by-frame
         ret, frame = cam.read()
@@ -153,15 +192,15 @@ if __name__ == '__main__':
             out = frame.copy()
 
         if args.detect_largest:
-            largest = largest_from_array(cnts,args.detect_count)
+            largest = largest_from_array(cnts,args.detect_count, seperation)
             out = label_contours(out,largest)
 
         if args.detect_closest != 0:
-            closest = closest_from_array(cnts, args.detect_closest, args.detect_count)
+            closest = closest_from_array(cnts, args.detect_closest, args.detect_count, seperation)
             out = label_contours(out,closest)
 
         if args.detect_range != None:
-            inRange = range_from_array(cnts, args.detect_range)
+            inRange = range_from_array(cnts, args.detect_range, seperation)
             out = label_contours(out, inRange)
 
         dbg = cv2.resize(trfm, (0, 0), None, .25, .25)
