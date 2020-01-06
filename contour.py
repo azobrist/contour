@@ -226,6 +226,8 @@ def cmdline_args():
     
     p.add_argument("--use_jetson","-j", action="store_true",
                     help= "Use jetson interfaced with picam V2")
+    p.add_argument("--reset-config", action="store_true", default=False,
+                    help="Reset contour config options using .original file")
     p.add_argument("--resolution","-r", type=str, default="low", 
                     help="Resolution can be max, high, medium, or low.")
     p.add_argument("--show-all","-a", action="store_true", default=False,
@@ -259,8 +261,16 @@ if __name__ == '__main__':
     args = cmdline_args()
 
     settings_file = ".contour.json"
-    with open(settings_file, 'r') as f:
-        settings = json.load(f)
+
+    if args.reset_config:
+        with open(".original", 'r') as f:
+            settings = json.load(f)
+        with open(settings_file, 'w') as f:
+            json.dump(settings,f, indent=4)
+        exit(0)
+    else:
+        with open(settings_file, 'r') as f:
+            settings = json.load(f)
 
     res = resolutions[args.resolution]
     if args.use_jetson == True:
@@ -270,7 +280,7 @@ if __name__ == '__main__':
 
     if args.measure_from_lens:
         object_actual_dimension = float(input("Enter measurement of object to be measured in y dimension(cm): "))
-        if settings["pixelConversionFactor"] == None:
+        if settings["pixelConversionFactor"] == "NeedCalibratedValue":
             pixel_conversion_factor = float(input("Enter pixel conversion factor(cm/px): "))
         else:
             pixel_conversion_factor = settings["pixelConversionFactor"]
