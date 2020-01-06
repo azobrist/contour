@@ -61,7 +61,7 @@ def contour(image, settings, detect_largest=1):
 
     (cnts, _) = contours.sort_contours(cnts)
 
-    largest, index = largest_from_array(tmp,detect_largest)
+    largest, index = largest_from_array(cnts,detect_largest)
     cv2.drawContours(image, largest, -1, (0,255,0), 3)    
 
     cv2.drawContours(image, cnts, -1, (0,255,0), 1)    
