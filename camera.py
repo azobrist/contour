@@ -36,3 +36,6 @@ def gstreamer_pipeline(
             display_height,
         )
     )
+
+if __name__ == "__main__":
+    print(gstreamer_pipeline())
