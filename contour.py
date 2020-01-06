@@ -81,7 +81,7 @@ if __name__ == '__main__':
 
     res = resolutions[args.resolution]
     if args.use_jetson == True:
-        cam = cv2.VideoCapture(gstreamer_pipeline(res[0],res[1],res[0],res[1]))
+        cam = cv2.VideoCapture(gstreamer_pipeline(display_width=res[0],display_height=res[1]))
     else:
         cam = cv2.VideoCapture(0)
 
