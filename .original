@@ -1,4 +1,5 @@
 {
+    "pixelConversionFactor": None,
     "blurImage": "True", 
     "blurKernelSize": "(7,7)", 
     "edgingLowThresh": [20, 30],

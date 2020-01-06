@@ -270,7 +270,10 @@ if __name__ == '__main__':
 
     if args.measure_from_lens:
         object_actual_dimension = float(input("Enter measurement of object to be measured in y dimension(cm): "))
-        pixel_conversion_factor = float(input("Enter pixel conversion factor(cm/px): "))
+        if settings["pixelConversionFactor"] == None:
+            pixel_conversion_factor = float(input("Enter pixel conversion factor(cm/px): "))
+        else:
+            pixel_conversion_factor = settings["pixelConversionFactor"]
         resolution_factor = calc_resolution_factor(res[1])
 
     seperation = args.pixel_seperation
