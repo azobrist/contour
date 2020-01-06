@@ -17,7 +17,7 @@ def largest_from_array(cnts, count):
                 max_index = i
         largest.append(cnts[max_index])
         cnts = np.delete(cnts,max_index,0)
-    return largest, max_index
+    return largest
 
 def closest_from_array(cnts, area_to_match, count):
     closest = []
@@ -33,7 +33,15 @@ def closest_from_array(cnts, area_to_match, count):
                 diff_index = i
         closest.append(cnts[diff_index])
         cnts = np.delete(cnts,diff_index,0)
-    return closest, diff_index
+    return closest
+
+def range_from_array(cnts, rangeXtoY):
+    inRange = []
+    for i,c in enumerate(cnts):
+        size = cv2.contourArea(c)
+        if size >= rangeXtoY[0] and size <= rangeXtoY[1]:
+            inRange.append(c)
+    return inRange
 
 def label_contours(image,cnts):
     for i,c in enumerate(cnts):
@@ -82,9 +90,10 @@ def contour(image, settings):
 
     (cnts, _) = contours.sort_contours(cnts)
 
-    cv2.drawContours(image, cnts, -1, (0,255,0), 1)    
+    contoured_img = image.copy()
+    cv2.drawContours(contoured_img, cnts, -1, (0,255,0), 1)    
 
-    return cnts, image, full_transform
+    return cnts, contoured_img, full_transform
 
 def cmdline_args():
     # Make parser object
@@ -93,16 +102,20 @@ def cmdline_args():
         """,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
-    p.add_argument('--use_jetson',action="store_true",
+    p.add_argument("--use_jetson","-j", action="store_true",
                     help= "Use jetson interfaced with picam V2")
     p.add_argument("--resolution","-r", type=str, default="low", 
                     help="Resolution can be max, high, medium, or low.")
+    p.add_argument("--show-all","-a", action="store_true", default=False,
+                    help="Show all contours in processed image output")
     p.add_argument("--detect-count","-N", type=int, default=1,
                     help="Select N number of contours to detect")
     p.add_argument("--detect-largest","-L", action="store_true", default=False,
                     help="Detect largest of -N number of contour areas")
-    p.add_argument("--detect-closest","-C", type=int, default=10000,
+    p.add_argument("--detect-closest","-C", type=int, default=0,
                     help="Detect closest to area X of -N number of contour areas")
+    p.add_argument("--detect-range","-R", type=int, nargs=2,
+                    help="Detect all areas of contours in range(-R x y)")
 
     return(p.parse_args())
 
@@ -131,17 +144,26 @@ if __name__ == '__main__':
         
         cnts, img, trfm = contour(frame, settings)
 
-        if args.detect_largest:
-            largest, index = largest_from_array(cnts,args.detect_count)
-            img = label_contours(img,largest)
+        if args.show_all:
+            out = img.copy()
+        else:
+            out = frame.copy()
 
-        if args.detect_closest:
-            closest, index = closest_from_array(cnts, args.detect_closest, args.detect_count)
-            img = label_contours(img,closest)
+        if args.detect_largest:
+            largest = largest_from_array(cnts,args.detect_count)
+            out = label_contours(out,largest)
+
+        if args.detect_closest != 0:
+            closest = closest_from_array(cnts, args.detect_closest, args.detect_count)
+            out = label_contours(out,closest)
+
+        if args.detect_range != None:
+            inRange = range_from_array(cnts, args.detect_range)
+            out = label_contours(out, inRange)
 
         dbg = cv2.resize(trfm, (0, 0), None, .25, .25)
         # live_contour = np.concatenate((dbg,img),axis=1)
-        cv2.imshow('Contour', img)
+        cv2.imshow('Contour', out)
         cv2.imshow('Transform',dbg)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
