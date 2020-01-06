@@ -6,6 +6,9 @@ resolutions = { "max": max_picam_resolution,
                 "medium": np.multiply(max_picam_resolution,0.50), 
                 "low": np.multiply(max_picam_resolution,0.25)}
 
+def calc_resolution_factor(resolutionY):
+    return resolutionY*3.04/2.76
+
 #this is the pipeline used to communicate with the V2 picam module using jetson
 def gstreamer_pipeline(
     capture_width=3240,

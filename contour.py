@@ -131,6 +131,7 @@ def bound_contour(image, contour):
         (255, 0, 255), 2)
 
     # compute the Euclidean distance between the midpoints
+    # dA is Y direction, if not rotating
     dA = euclidean_distance((tltrX, tltrY), (blbrX, blbrY))
     dB = euclidean_distance((tlblX, tlblY), (trbrX, trbrY))
 
@@ -141,16 +142,32 @@ def bound_contour(image, contour):
             (int(trbrX + 10), int(trbrY)), cv2.FONT_HERSHEY_SIMPLEX,
             0.65, (255, 255, 255), 2)
     
+    return image, dA, dB
+
+def calc_distance_from_lens(image, pixel_array):
+    global pixel_conversion_factor
+    global resolution_factor
+    global object_actual_dimension
+    global res
+
+    for i,p in enumerate(pixel_array):
+        height = pixel_conversion_factor - (object_actual_dimension/p)
+        height = height * resolution_factor
+        cv2.putText(image, "Height#{0}: {1:0.2f}".format(i,height),
+                    (int(res[0])-50,80+30*i), cv2.FONT_HERSHEY_SIMPLEX,
+                    0.65, (255, 255, 255), 2)
+
     return image
 
-def measure_contours(image,cnts, bounding_box):
-    #bounding box not selected
-    if bounding_box == 0:
-        return
-
-    for i,c in enumerate(cnts):
-        image = bound_contour(image, c)
+def measure_contours(image,cnts, bounding_box=False, measure_dist=False):
+    if bounding_box:
+        measY = []
+        for i,c in enumerate(cnts):
+            image, dY, _ = bound_contour(image, c)
+            measY.append(dY)
         
+        if measure_dist:
+            image = calc_distance_from_lens(image, measY)
     return image
 
 def contour(image, settings):
@@ -225,8 +242,10 @@ def cmdline_args():
                     help="Detect all areas of contours in range(-R x y)")
     p.add_argument("--pixel_seperation","-p", type=int, default=0,
                     help="May need to seperate detected contour centers by pixel")
-    p.add_argument("--bounding-box","-b", type=float, default=0, nargs='?',
-                    help="draw non-rotating bounding box around detected contours, annotated known y metric for display")
+    p.add_argument("--bounding-box","-b", action="store_true", default=False,
+                    help="Draw non-rotating bounding box around detected contours")
+    p.add_argument("--measure-from-lens","-m", action="store_true", default=False,
+                    help="Measure distance of contour from lens using y dimension, given lens measurements")
 
     return(p.parse_args())
 
@@ -249,6 +268,11 @@ if __name__ == '__main__':
     else:
         cam = cv2.VideoCapture(0)
 
+    if args.measure_from_lens:
+        object_actual_dimension = float(input("Enter measurement of object to be measured in y dimension(cm): "))
+        pixel_conversion_factor = float(input("Enter pixel conversion factor(cm/px): "))
+        resolution_factor = calc_resolution_factor(res[1])
+
     seperation = args.pixel_seperation
 
     while(True):
@@ -265,17 +289,17 @@ if __name__ == '__main__':
         if args.detect_largest:
             largest = largest_from_array(cnts,args.detect_count, seperation)
             out = label_contours(out,largest, args.show_size)
-            out = measure_contours(out,largest, args.bounding_box)
+            out = measure_contours(out,largest, args.bounding_box, args.measure_from_lens)
 
         if args.detect_closest != 0:
             closest = closest_from_array(cnts, args.detect_closest, args.detect_count, seperation)
             out = label_contours(out,closest, args.show_size)
-            out = measure_contours(out,closest, args.bounding_box)
+            out = measure_contours(out,closest, args.bounding_box, args.measure_from_lens)
 
         if args.detect_range != None:
             inRange = range_from_array(cnts, args.detect_range, seperation)
             out = label_contours(out, inRange, args.show_size)
-            out = measure_contours(out,inRange, args.bounding_box)
+            out = measure_contours(out,inRange, args.bounding_box, args.measure_from_lens)
 
         dbg = cv2.resize(trfm, (0, 0), None, .25, .25)
         # live_contour = np.concatenate((dbg,img),axis=1)
