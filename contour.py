@@ -232,6 +232,8 @@ def cmdline_args():
                     help="Reset contour config options using .original file")
     p.add_argument("--snap-shot","-ss", action="store_true", default=False,
                     help="Take a snap shot and save it to file")
+    p.add_argument("--show-transform","-t", action="store_true", default=False,
+                    help="Show image transform in seperate window")
     p.add_argument("--resolution","-r", type=str, default="low", 
                     help="Resolution can be max, high, medium, or low.")
     p.add_argument("--show-all","-a", action="store_true", default=False,
@@ -280,7 +282,7 @@ if __name__ == '__main__':
     if args.use_jetson == True:
         cam = cv2.VideoCapture(gstreamer_pipeline(display_width=res[0],display_height=res[1]), cv2.CAP_GSTREAMER)
     elif args.use_jetson_usb == True:
-        cam = cv2.VideoCapture(device='/dev/video1')
+        cam = cv2.VideoCapture(0,device='/dev/video1')
     else:
         cam = cv2.VideoCapture(0)
 
@@ -333,7 +335,8 @@ if __name__ == '__main__':
             dbg = cv2.resize(trfm, (0, 0), None, .25, .25)
             # live_contour = np.concatenate((dbg,img),axis=1)
             cv2.imshow('Contour', out)
-            cv2.imshow('Transform',dbg)
+            if args.show_transform:
+                cv2.imshow('Transform',dbg)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
