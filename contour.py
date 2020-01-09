@@ -230,6 +230,10 @@ def cmdline_args():
                     help= "Use jetson interfaced with usb camera")
     p.add_argument("--reset-config", action="store_true", default=False,
                     help="Reset contour config options using .original file")
+    p.add_argument("--save-config", type=str, default=None,
+                    help="Save .contour.json file to designated name file to be used later")
+    p.add_argument("--use-config", type=str, default=None,
+                    help="Use test settings for designated name file")
     p.add_argument("--snap-shot","-ss", action="store_true", default=False,
                     help="Take a snap shot and save it to file")
     p.add_argument("--show-transform","-t", action="store_true", default=False,
@@ -266,7 +270,10 @@ if __name__ == '__main__':
         
     args = cmdline_args()
 
-    settings_file = ".contour.json"
+    if args.use_config:
+        settings_file = args.use_config+".json"
+    else:
+        settings_file = ".contour.json"
 
     if args.reset_config:
         with open(".original", 'r') as f:
@@ -277,6 +284,13 @@ if __name__ == '__main__':
     else:
         with open(settings_file, 'r') as f:
             settings = json.load(f)
+        print(settings)
+        exit(0)
+        if args.save_config and args.use_config == None:
+            with open(args.save_config+".json", 'w') as f:
+                json.dump(settings,f,indent=4)
+            exit(0)
+        
 
     res = resolutions[args.resolution]
     if args.use_jetson == True:
