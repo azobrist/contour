@@ -224,9 +224,9 @@ def cmdline_args():
         """,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
-    p.add_argument("--use_jetson","-j", action="store_true",
+    p.add_argument("--use-jetson","-j", action="store_true",
                     help= "Use jetson interfaced with picam V2")
-    p.add_argument("--use_jetson_usb","-u", action="store_true",
+    p.add_argument("--use-jetson-usb","-u", action="store_true",
                     help= "Use jetson interfaced with usb camera")
     p.add_argument("--reset-config", action="store_true", default=False,
                     help="Reset contour config options using .original file")
@@ -285,7 +285,6 @@ if __name__ == '__main__':
         with open(settings_file, 'r') as f:
             settings = json.load(f)
         print(settings)
-        exit(0)
         if args.save_config and args.use_config == None:
             with open(args.save_config+".json", 'w') as f:
                 json.dump(settings,f,indent=4)
@@ -294,7 +293,7 @@ if __name__ == '__main__':
 
     res = resolutions[args.resolution]
     if args.use_jetson == True:
-        cam = cv2.VideoCapture(gstreamer_pipeline(display_width=res[0],display_height=res[1]), cv2.CAP_GSTREAMER)
+        cam = cv2.VideoCapture(gstreamer_pipeline(flip_method=2,display_width=res[0],display_height=res[1]), cv2.CAP_GSTREAMER)
     elif args.use_jetson_usb == True:
         cam = cv2.VideoCapture(0,device='/dev/video1')
     else:
