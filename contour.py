@@ -309,6 +309,10 @@ if __name__ == '__main__':
 
     seperation = args.pixel_seperation
 
+    cv2.namedWindow('Contour', cv2.WINDOW_NORMAL)
+    if args.show_transform:
+        cv2.namedWindow('Transform',cv2.WINDOW_NORMAL)
+
     while(True):
         # Capture frame-by-frame
         ret, frame = cam.read()
@@ -349,7 +353,9 @@ if __name__ == '__main__':
             # live_contour = np.concatenate((dbg,img),axis=1)
             cv2.imshow('Contour', out)
             if args.show_transform:
+                window_size = cv2.getWindowImageRect('Contour')
                 cv2.imshow('Transform',dbg)
+                cv2.moveWindow('Transform',window_size[2],0)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
