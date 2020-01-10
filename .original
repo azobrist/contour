@@ -7,8 +7,8 @@
     "selectTransform": 1,
     "dilateIteration": 1,
     "erodeIteration": 1,
-    "detectionType": "Largest",
-    "detectClosest": "None",
+    "detectionType": "None",
+    "detectClosest": 0,
     "detectRange": [0,0],
     "detectCount": 0
 }
