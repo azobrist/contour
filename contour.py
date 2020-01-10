@@ -227,11 +227,11 @@ def cmdline_args():
     
     p.add_argument("--use-laptop","-l", action="store_true", default=False,
                     help= "Use laptop camera")
-    p.add_argument("--reset-config", action="store_true", default=False,
+    p.add_argument("--reset-config","-rc", action="store_true", default=False,
                     help="Reset contour config options using .original file")
-    p.add_argument("--save-config", type=str, default=None,
+    p.add_argument("--save-config","-sc", type=str, default=None,
                     help="Save .contour.json file to designated name file to be used later")
-    p.add_argument("--use-config", type=str, default=None,
+    p.add_argument("--use-config","-uc", type=str, default=None,
                     help="Use test settings for designated name file")
     p.add_argument("--snap-shot","-ss", action="store_true", default=False,
                     help="Take a snap shot and save it to file")
@@ -257,7 +257,7 @@ def cmdline_args():
                     help="Draw non-rotating bounding box around detected contours")
     p.add_argument("--measure-from-lens","-m", action="store_true", default=False,
                     help="Measure distance of contour from lens using y dimension, given lens measurements")
-    p.add_argument("--set-pixel-factor", action="store_true", default=False,
+    p.add_argument("--set-pixel-factor", "-spf", action="store_true", default=False,
                     help="Set the pixel conversion factor in .contour.json")
 
     return(p.parse_args())
@@ -298,8 +298,12 @@ if __name__ == '__main__':
     else:
         cam = cv2.VideoCapture(0)
 
-    if args.measure_from_lens:
-        object_actual_dimension = float(input("Enter measurement of object to be measured in y dimension(cm): "))
+    measure = settings["measure"] == "True" or args.measure_from_lens == True
+    if measure:
+        if settings["itemDimension"] == "None": 
+            object_actual_dimension = float(input("Enter measurement of object to be measured in y dimension(cm): "))
+        else:
+            object_actual_dimension = float(settings["itemDimension"])
         if settings["pixelConversionFactor"] == "NeedCalibratedValue":
             pixel_conversion_factor = float(input("Enter pixel conversion factor(cm/px): "))
         else:
@@ -349,18 +353,18 @@ if __name__ == '__main__':
         if detection_type == "Largest":
             largest = largest_from_array(cnts,detect_count, seperation)
             out = label_contours(out,largest, args.show_size)
-            out,_ = measure_contours(out,largest, bound, args.measure_from_lens)
+            out,_ = measure_contours(out,largest, bound, measure)
 
         if detection_type == "Closest": 
             closest = closest_from_array(cnts, detect_closest, detect_count, seperation)
             out = label_contours(out,closest, args.show_size)
-            out,dY = measure_contours(out,closest, bound, args.measure_from_lens)
+            out,dY = measure_contours(out,closest, bound, measure)
 
         if detection_type == "Range":
             in_range = range_from_array(cnts, detect_range)
             largest_in_range = largest_from_array(in_range,detect_count, seperation)
             out = label_contours(out, largest_in_range, args.show_size)
-            out,_ = measure_contours(out,largest_in_range, bound, args.measure_from_lens)
+            out,_ = measure_contours(out,largest_in_range, bound, measure)
 
         h,w,_ = out.shape
         cv2.putText(out, "Res:{0}x{1}".format(w,h),
