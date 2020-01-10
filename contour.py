@@ -160,15 +160,16 @@ def calc_distance_from_lens(image, pixel_array):
     return image
 
 def measure_contours(image,cnts, bounding_box=False, measure_dist=False):
+    dY = 0
     if bounding_box:
         measY = []
         for i,c in enumerate(cnts):
-            image, dY, _ = bound_contour(image, c)
+            image, dY, dX = bound_contour(image, c)
             measY.append(dY)
         
         if measure_dist:
             image = calc_distance_from_lens(image, measY)
-    return image
+    return image, dY
 
 def contour(image, settings):
 
@@ -256,6 +257,8 @@ def cmdline_args():
                     help="Draw non-rotating bounding box around detected contours")
     p.add_argument("--measure-from-lens","-m", action="store_true", default=False,
                     help="Measure distance of contour from lens using y dimension, given lens measurements")
+    p.add_argument("--set-pixel-factor", action="store_true", default=False,
+                    help="Set the pixel conversion factor in .contour.json")
 
     return(p.parse_args())
 
@@ -327,6 +330,11 @@ if __name__ == '__main__':
 
     bound = settings["showBoundingBox"] == "True" or args.bounding_box == True
 
+    if args.set_pixel_factor:
+        detection_type = "Closest"
+        detect_closest = 320
+        bound = True
+
     while(True):
         # Capture frame-by-frame
         ret, frame = cam.read()
@@ -341,18 +349,18 @@ if __name__ == '__main__':
         if detection_type == "Largest":
             largest = largest_from_array(cnts,detect_count, seperation)
             out = label_contours(out,largest, args.show_size)
-            out = measure_contours(out,largest, bound, args.measure_from_lens)
+            out,_ = measure_contours(out,largest, bound, args.measure_from_lens)
 
         if detection_type == "Closest": 
             closest = closest_from_array(cnts, detect_closest, detect_count, seperation)
             out = label_contours(out,closest, args.show_size)
-            out = measure_contours(out,closest, bound, args.measure_from_lens)
+            out,dY = measure_contours(out,closest, bound, args.measure_from_lens)
 
         if detection_type == "Range":
             in_range = range_from_array(cnts, detect_range)
             largest_in_range = largest_from_array(in_range,detect_count, seperation)
             out = label_contours(out, largest_in_range, args.show_size)
-            out = measure_contours(out,largest_in_range, bound, args.measure_from_lens)
+            out,_ = measure_contours(out,largest_in_range, bound, args.measure_from_lens)
 
         h,w,_ = out.shape
         cv2.putText(out, "Res:{0}x{1}".format(w,h),
@@ -372,9 +380,16 @@ if __name__ == '__main__':
                 cv2.imshow('Transform',dbg)
                 cv2.moveWindow('Transform',window_alignment,0)
 
+        if args.set_pixel_factor:
+            settings["pixelConversionFactor"] = 1.49/float(dY)
+
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
+    if args.set_pixel_factor:
+        with open(settings_file, 'w') as f:
+            json.dump(settings,f, indent=4)
+            
     # When everything done, release the capture
     cam.release()
     cv2.destroyAllWindows()
