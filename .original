@@ -6,5 +6,9 @@
     "edgingHighThresh": [30,100],
     "selectTransform": 1,
     "dilateIteration": 1,
-    "erodeIteration": 1
+    "erodeIteration": 1,
+    "detectionType": "Largest",
+    "detectClosest": "None",
+    "detectRange": [0,0],
+    "detectCount": 0
 }

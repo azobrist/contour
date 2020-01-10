@@ -76,14 +76,14 @@ def closest_from_array(cnts, area_to_match, count, seperation):
         attempts += 1
     return closest
 
-def range_from_array(cnts, rangeXtoY, seperation):
-    inRange = []
+def range_from_array(cnts, rangeXtoY):
+    in_range = []
     for i,c in enumerate(cnts):
         size = cv2.contourArea(c)
         if size >= rangeXtoY[0] and size <= rangeXtoY[1]:
-            if valid_seperation(inRange, c, seperation):
-                inRange.append(c)
-    return inRange
+            # if valid_seperation(inRange, c, seperation):
+            in_range.append(c)
+    return in_range
 
 def label_contours(image,cnts,show_sizes=False):
     for i,c in enumerate(cnts):
@@ -320,20 +320,26 @@ if __name__ == '__main__':
         else:
             out = frame.copy()
 
-        if args.detect_largest:
-            largest = largest_from_array(cnts,args.detect_count, seperation)
+        if settings["detectCount"] != 0:
+            detect_count = settings["detectCount"]
+        else:
+            detect_count = args.detect_count
+        
+        if args.detect_largest or settings["detectionType"] == "Largest":
+            largest = largest_from_array(cnts,detect_count, seperation)
             out = label_contours(out,largest, args.show_size)
             out = measure_contours(out,largest, args.bounding_box, args.measure_from_lens)
 
-        if args.detect_closest != 0:
-            closest = closest_from_array(cnts, args.detect_closest, args.detect_count, seperation)
+        if args.detect_closest != 0 or settings["detectionType"] == "Closest":
+            closest = closest_from_array(cnts, args.detect_closest, detect_count, seperation)
             out = label_contours(out,closest, args.show_size)
             out = measure_contours(out,closest, args.bounding_box, args.measure_from_lens)
 
-        if args.detect_range != None:
-            inRange = range_from_array(cnts, args.detect_range, seperation)
-            out = label_contours(out, inRange, args.show_size)
-            out = measure_contours(out,inRange, args.bounding_box, args.measure_from_lens)
+        if args.detect_range != None or settings["detectionType"] == "Range":
+            in_range = range_from_array(cnts, args.detect_range)
+            largest_in_range = largest_from_array(in_range,detect_count, seperation)
+            out = label_contours(out, largest_in_range, args.show_size)
+            out = measure_contours(out,largest_in_range, args.bounding_box, args.measure_from_lens)
 
         h,w,_ = out.shape
         cv2.putText(out, "Res:{0}x{1}".format(w,h),
