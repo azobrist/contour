@@ -309,9 +309,9 @@ if __name__ == '__main__':
 
     seperation = args.pixel_seperation
 
-    cv2.namedWindow('Contour', cv2.WINDOW_NORMAL)
+    cv2.namedWindow('Contour', cv2.WINDOW_AUTOSIZE)
     if args.show_transform:
-        cv2.namedWindow('Transform',cv2.WINDOW_NORMAL)
+        cv2.namedWindow('Transform',cv2.WINDOW_AUTOSIZE)
 
     while(True):
         # Capture frame-by-frame
@@ -349,13 +349,13 @@ if __name__ == '__main__':
             cv2.imwrite('trfm.jpg',trfm)
             break
         else:
-            dbg = cv2.resize(trfm, (0, 0), None, .25, .25)
+            dbg = cv2.resize(trfm, (0, 0), None, .30, .30)
             # live_contour = np.concatenate((dbg,img),axis=1)
             cv2.imshow('Contour', out)
             if args.show_transform:
-                window_size = cv2.getWindowImageRect('Contour')
+                window_alignment = int(res[0])+100
                 cv2.imshow('Transform',dbg)
-                cv2.moveWindow('Transform',window_size[2],0)
+                cv2.moveWindow('Transform',window_alignment,0)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
