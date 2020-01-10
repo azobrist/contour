@@ -153,7 +153,7 @@ def calc_distance_from_lens(image, pixel_array):
     for i,p in enumerate(pixel_array):
         height = pixel_conversion_factor - (object_actual_dimension/p)
         height = height * resolution_factor
-        cv2.putText(image, "Height#{0}: {1:0.2f}".format(i,height),
+        cv2.putText(image, "Height#{0}: {1:0.2f}cm".format(i,height),
                     (int(res[0])-200,80+30*i), cv2.FONT_HERSHEY_SIMPLEX,
                     0.65, (255, 255, 255), 2)
 
@@ -224,10 +224,8 @@ def cmdline_args():
         """,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
-    p.add_argument("--use-jetson","-j", action="store_true",
-                    help= "Use jetson interfaced with picam V2")
-    p.add_argument("--use-jetson-usb","-u", action="store_true",
-                    help= "Use jetson interfaced with usb camera")
+    p.add_argument("--use-laptop","-l", action="store_true", default=False,
+                    help= "Use laptop camera")
     p.add_argument("--reset-config", action="store_true", default=False,
                     help="Reset contour config options using .original file")
     p.add_argument("--save-config", type=str, default=None,
@@ -292,10 +290,8 @@ if __name__ == '__main__':
         
 
     res = resolutions[args.resolution]
-    if args.use_jetson == True:
+    if args.use_laptop == False:
         cam = cv2.VideoCapture(gstreamer_pipeline(flip_method=2,display_width=res[0],display_height=res[1]), cv2.CAP_GSTREAMER)
-    elif args.use_jetson_usb == True:
-        cam = cv2.VideoCapture(0,device='/dev/video1')
     else:
         cam = cv2.VideoCapture(0)
 
