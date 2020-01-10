@@ -10,5 +10,6 @@
     "detectionType": "None",
     "detectClosest": 0,
     "detectRange": [0,0],
-    "detectCount": 0
+    "detectCount": 0,
+	"showBoundingBox": "False"
 }

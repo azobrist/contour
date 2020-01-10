@@ -173,8 +173,8 @@ def measure_contours(image,cnts, bounding_box=False, measure_dist=False):
 def contour(image, settings):
 
     im = image.copy()
-    if settings['blurImage'] == True:
-        im = cv2.GaussianBlur(im, settings['blurKernelSize'], 0)
+    if settings['blurImage'] == "True":
+        im = cv2.GaussianBlur(im, (7,7), 0)
 
     gray = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
 
@@ -309,6 +309,24 @@ if __name__ == '__main__':
     if args.show_transform:
         cv2.namedWindow('Transform',cv2.WINDOW_AUTOSIZE)
 
+    detect_count = settings["detectCount"] if settings["detectCount"] != 0 else args.detect_count
+    detect_closest = settings["detectClosest"] if settings["detectClosest"] != 0 else args.detect_closest
+    detect_range = settings["detectRange"] if settings["detectRange"] != [0,0] else args.detect_range
+
+    if settings["detectionType"] != "None":
+        detection_type = settings["detectionType"]
+    else:
+        if args.detect_largest:
+            detection_type = "Largest"
+        elif args.detect_closest:
+            detection_type = "Closest"
+        elif args.detect_range:
+            detection_type = "Range"
+        else:
+            detection_type = None
+
+    bound = settings["showBoundingBox"] == "True" or args.bounding_box == True
+
     while(True):
         # Capture frame-by-frame
         ret, frame = cam.read()
@@ -320,35 +338,21 @@ if __name__ == '__main__':
         else:
             out = frame.copy()
 
-        detect_count = settings["detectCount"] if settings["detectCount"] != 0 else args.detect_count
-        detect_closest = settings["detectClosest"] if settings["detectClosest"] != 0 else args.detect_closest
-        detect_range = settings["detectRange"] if settings["detectRange"] != [0,0] else args.detect_range
-
-        if settings["detectionType"] != "None":
-            detection_type = settings["detectionType"]
-        else:
-            if args.detect_largest:
-                detection_type = "Largest"
-            elif args.detect_closest:
-                detection_type = "Closest"
-            elif args.detect_range:
-                detection_type = "Range"
-
         if detection_type == "Largest":
             largest = largest_from_array(cnts,detect_count, seperation)
             out = label_contours(out,largest, args.show_size)
-            out = measure_contours(out,largest, args.bounding_box, args.measure_from_lens)
+            out = measure_contours(out,largest, bound, args.measure_from_lens)
 
         if detection_type == "Closest": 
             closest = closest_from_array(cnts, detect_closest, detect_count, seperation)
             out = label_contours(out,closest, args.show_size)
-            out = measure_contours(out,closest, args.bounding_box, args.measure_from_lens)
+            out = measure_contours(out,closest, bound, args.measure_from_lens)
 
         if detection_type == "Range":
             in_range = range_from_array(cnts, detect_range)
             largest_in_range = largest_from_array(in_range,detect_count, seperation)
             out = label_contours(out, largest_in_range, args.show_size)
-            out = measure_contours(out,largest_in_range, args.bounding_box, args.measure_from_lens)
+            out = measure_contours(out,largest_in_range, bound, args.measure_from_lens)
 
         h,w,_ = out.shape
         cv2.putText(out, "Res:{0}x{1}".format(w,h),
