@@ -259,11 +259,14 @@ def cmdline_args():
                     help="Measure distance of contour from lens using y dimension, given lens measurements")
     p.add_argument("--set-pixel-factor", "-spf", action="store_true", default=False,
                     help="Set the pixel conversion factor in .contour.json")
+    p.add_argument("--detect_blob","-B", action="store_true", default=False,
+                    help="Detect blobs ontop of other detection algorithms")
 
     return(p.parse_args())
 
 if __name__ == '__main__':
     from camera import *
+    from blob import *
 
     if sys.version_info<(3,0,0):
         sys.stderr.write("You need python 3.0 or later to run this script\n")
@@ -370,6 +373,9 @@ if __name__ == '__main__':
         cv2.putText(out, "Res:{0}x{1}".format(w,h),
             (10, 20), cv2.FONT_HERSHEY_SIMPLEX,
             0.65, (255, 255, 255), 2)
+
+        if args.detect_blob:
+            out = detect_blob(out)
 
         if args.snap_shot:
             cv2.imwrite('out.jpg',out)
