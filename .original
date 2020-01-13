@@ -13,5 +13,7 @@
     "detectRange": [0,0],
     "detectCount": 0,
 	"showBoundingBox": "False",
-	"measure": "False"
+	"measure": "False",
+    "cropImage": false,
+    "cropDimensions": null
 }

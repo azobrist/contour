@@ -261,8 +261,12 @@ def cmdline_args():
                     help="Set the pixel conversion factor in .contour.json")
     p.add_argument("--detect-blob","-B", action="store_true", default=False,
                     help="Detect blobs ontop of other detection algorithms")
-    p.add_argument("--truncate-image","-q", type=float, default=0,
-                    help="Resize image to percentage of real size (1-100)")
+    p.add_argument("--select-roi","-roi", action="store_true", default=False,
+                    help="Select roi and save to test settings")
+    # p.add_argument("--crop-height","-ch", type=int, default=0,
+    #                 help="Crop image height by number of pixels")
+    # p.add_argument("--crop-width","-cw", type=int, default=0,
+    #                 help="Crop image width by number of pixels")
 
     return(p.parse_args())
 
@@ -348,11 +352,15 @@ if __name__ == '__main__':
         # Capture frame-by-frame
         ret, frame = cam.read()
         
-        if args.truncate_image != 0:
-            percent = args.truncate_image/100
-            frame = cv2.resize(frame, (0,0), None, percent,percent)
-            if measure:
-                resolution_factor = calc_resolution_factor(res[1]*percent)
+        if args.select_roi:
+            crop_settings = cv2.selectROI(frame)
+            print(crop_settings)
+            cv2.destroyAllWindows()
+            break
+
+        if settings["cropImage"] == True:
+            r = settings["cropDimensions"]
+            frame = frame[r[1]:(r[1]+r[3]), r[0]:(r[0]+r[2])]
 
         cnts, img, trfm = contour(frame, settings)
 
@@ -406,7 +414,14 @@ if __name__ == '__main__':
     if args.set_pixel_factor:
         with open(settings_file, 'w') as f:
             json.dump(settings,f, indent=4)
-            
+
+    if args.select_roi:
+        print("Saved {0} to crop settings".format(crop_settings))
+        settings["cropDimensions"] = crop_settings
+        settings["cropImage"] = True
+        with open(settings_file, 'w') as f:
+            json.dump(settings,f, indent=4)
+
     # When everything done, release the capture
     cam.release()
     cv2.destroyAllWindows()
