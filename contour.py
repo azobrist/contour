@@ -317,7 +317,12 @@ if __name__ == '__main__':
             pixel_conversion_factor = float(input("Enter pixel conversion factor(cm/px): "))
         else:
             pixel_conversion_factor = settings["pixelConversionFactor"]
-        resolution_factor = calc_resolution_factor(res[1])
+        if settings["cropImage"] == True:
+            r = settings["cropDimensions"]
+            yDim = r[3]
+            resolution_factor = calc_resolution_factor(yDim)
+        else:
+            resolution_factor = calc_resolution_factor(res[1])
 
     seperation = args.pixel_seperation
 
