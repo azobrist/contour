@@ -259,8 +259,10 @@ def cmdline_args():
                     help="Measure distance of contour from lens using y dimension, given lens measurements")
     p.add_argument("--set-pixel-factor", "-spf", action="store_true", default=False,
                     help="Set the pixel conversion factor in .contour.json")
-    p.add_argument("--detect_blob","-B", action="store_true", default=False,
+    p.add_argument("--detect-blob","-B", action="store_true", default=False,
                     help="Detect blobs ontop of other detection algorithms")
+    p.add_argument("--truncate-image","-q", type=float, default=0,
+                    help="Resize image to percentage of real size (1-100)")
 
     return(p.parse_args())
 
@@ -346,6 +348,12 @@ if __name__ == '__main__':
         # Capture frame-by-frame
         ret, frame = cam.read()
         
+        if args.truncate_image != 0:
+            percent = args.truncate_image/100
+            frame = cv2.resize(frame, (0,0), None, percent,percent)
+            if measure:
+                resolution_factor = calc_resolution_factor(res[1]*percent)
+
         cnts, img, trfm = contour(frame, settings)
 
         if args.show_all:
@@ -383,7 +391,6 @@ if __name__ == '__main__':
             break
         else:
             dbg = cv2.resize(trfm, (0, 0), None, .30, .30)
-            # live_contour = np.concatenate((dbg,img),axis=1)
             cv2.imshow('Contour', out)
             if args.show_transform:
                 window_alignment = int(res[0])+100
