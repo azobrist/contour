@@ -1,7 +1,7 @@
 {
     "pixelConversionFactor": "NeedCalibratedValue",
 	"itemDimension": "None",
-    "blurImage": "True", 
+    "blurImage": true, 
     "blurKernelSize": "(7,7)", 
     "edgingLowThresh": [20, 30],
     "edgingHighThresh": [30,100],
@@ -12,8 +12,8 @@
     "detectClosest": 0,
     "detectRange": [0,0],
     "detectCount": 0,
-	"showBoundingBox": "False",
-	"measure": "False",
+	"showBoundingBox": false,
+	"measure": false,
     "cropImage": false,
     "cropDimensions": null,
     "contourHierarchy": "None"
