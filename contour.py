@@ -211,7 +211,10 @@ def contour(image, settings):
     cnts = cv2.findContours(transform, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
     cnts = imutils.grab_contours(cnts)
 
-    (cnts, _) = contours.sort_contours(cnts)
+    try:
+        (cnts, _) = contours.sort_contours(cnts)
+    except:
+        print("No contours detectd")
 
     contoured_img = image.copy()
     cv2.drawContours(contoured_img, cnts, -1, (0,255,0), 1)    
@@ -233,6 +236,8 @@ def cmdline_args():
                     help="Save .contour.json file to designated name file to be used later")
     p.add_argument("--use-config","-uc", type=str, default=None,
                     help="Use test settings for designated name file")
+    p.add_argument("--load-config","-lc", action="store_true", default=False,
+                    help="load use-config test file into default .contour.json file")
     p.add_argument("--snap-shot","-ss", action="store_true", default=False,
                     help="Take a snap shot and save it to file")
     p.add_argument("--show-transform","-t", action="store_true", default=False,
@@ -299,6 +304,9 @@ if __name__ == '__main__':
             with open(args.save_config+".json", 'w') as f:
                 json.dump(settings,f,indent=4)
             exit(0)
+        elif args.load_config and args.use_config:
+            with open(".contour.json", 'w') as f:
+                json.dump(settings,f,indent=4)
         
 
     res = resolutions[args.resolution]
@@ -374,21 +382,22 @@ if __name__ == '__main__':
         else:
             out = frame.copy()
 
-        if detection_type == "Largest":
-            largest = largest_from_array(cnts,detect_count, seperation)
-            out = label_contours(out,largest, args.show_size)
-            out,_ = measure_contours(out,largest, bound, measure)
+        if len(cnts) != 0:
+            if detection_type == "Largest":
+                largest = largest_from_array(cnts,detect_count, seperation)
+                out = label_contours(out,largest, args.show_size)
+                out,_ = measure_contours(out,largest, bound, measure)
 
-        if detection_type == "Closest": 
-            closest = closest_from_array(cnts, detect_closest, detect_count, seperation)
-            out = label_contours(out,closest, args.show_size)
-            out,dY = measure_contours(out,closest, bound, measure)
+            if detection_type == "Closest": 
+                closest = closest_from_array(cnts, detect_closest, detect_count, seperation)
+                out = label_contours(out,closest, args.show_size)
+                out,dY = measure_contours(out,closest, bound, measure)
 
-        if detection_type == "Range":
-            in_range = range_from_array(cnts, detect_range)
-            largest_in_range = largest_from_array(in_range,detect_count, seperation)
-            out = label_contours(out, largest_in_range, args.show_size)
-            out,_ = measure_contours(out,largest_in_range, bound, measure)
+            if detection_type == "Range":
+                in_range = range_from_array(cnts, detect_range)
+                largest_in_range = largest_from_array(in_range,detect_count, seperation)
+                out = label_contours(out, largest_in_range, args.show_size)
+                out,_ = measure_contours(out,largest_in_range, bound, measure)
 
         h,w,_ = out.shape
         cv2.putText(out, "Res:{0}x{1}".format(w,h),
