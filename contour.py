@@ -208,10 +208,14 @@ def contour(image, settings):
     #use last transformation
     transform = erode
 
-    x,cnts,z = cv2.findContours(transform, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    print(type(x))
-    print(type(z))
-    #cnts = imutils.grab_contours(y)
+    rt = settings["contourHierarchy"]
+    if rt == "EXTERNAL":
+        rt = 0
+    else:
+        rt = 2
+
+    cnts = cv2.findContours(transform, rt, cv2.CHAIN_APPROX_SIMPLE)
+    cnts = imutils.grab_contours(cnts)
 
     try:
         (cnts, _) = contours.sort_contours(cnts)
