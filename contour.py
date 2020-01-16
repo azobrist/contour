@@ -154,7 +154,7 @@ def calc_distance_from_lens(image, pixel_array):
         height = pixel_conversion_factor - (object_actual_dimension/p)
         height = height * resolution_factor
         cv2.putText(image, "Height#{0}: {1:0.2f}cm".format(i,height),
-                    (int(res[0])-200,80+30*i), cv2.FONT_HERSHEY_SIMPLEX,
+                    (int(res[0])-250,20+30*i), cv2.FONT_HERSHEY_SIMPLEX,
                     0.65, (255, 255, 255), 2)
 
     return image
@@ -174,7 +174,7 @@ def measure_contours(image,cnts, bounding_box=False, measure_dist=False):
 def contour(image, settings):
 
     im = image.copy()
-    if settings['blurImage'] == "True":
+    if settings['blurImage'] == True:
         im = cv2.GaussianBlur(im, (7,7), 0)
 
     gray = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
@@ -208,8 +208,10 @@ def contour(image, settings):
     #use last transformation
     transform = erode
 
-    cnts = cv2.findContours(transform, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
-    cnts = imutils.grab_contours(cnts)
+    x,cnts,z = cv2.findContours(transform, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    print(type(x))
+    print(type(z))
+    #cnts = imutils.grab_contours(y)
 
     try:
         (cnts, _) = contours.sort_contours(cnts)
@@ -315,7 +317,7 @@ if __name__ == '__main__':
     else:
         cam = cv2.VideoCapture(0)
 
-    measure = settings["measure"] == "True" or args.measure_from_lens == True
+    measure = settings["measure"] == True or args.measure_from_lens == True
     if measure:
         if settings["itemDimension"] == "None": 
             object_actual_dimension = float(input("Enter measurement of object to be measured in y dimension(cm): "))
@@ -325,12 +327,12 @@ if __name__ == '__main__':
             pixel_conversion_factor = float(input("Enter pixel conversion factor(cm/px): "))
         else:
             pixel_conversion_factor = settings["pixelConversionFactor"]
-        if settings["cropImage"] == True:
-            r = settings["cropDimensions"]
-            yDim = r[3]
-            resolution_factor = calc_resolution_factor(yDim)
-        else:
-            resolution_factor = calc_resolution_factor(res[1])
+        #if settings["cropImage"] == True:
+        #    r = settings["cropDimensions"]
+        #    yDim = r[3]
+        #    resolution_factor = calc_resolution_factor(yDim)
+        #else:
+        resolution_factor = calc_resolution_factor(res[1])
 
     seperation = args.pixel_seperation
 
@@ -354,7 +356,7 @@ if __name__ == '__main__':
         else:
             detection_type = None
 
-    bound = settings["showBoundingBox"] == "True" or args.bounding_box == True
+    bound = settings["showBoundingBox"] == True or args.bounding_box == True
 
     if args.set_pixel_factor:
         detection_type = "Closest"
