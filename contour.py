@@ -42,6 +42,8 @@ def valid_seperation(cnts, target, seperation):
 def largest_from_array(cnts, count, seperation):
     largest = []
     attempts = 0
+    if len(cnts) < count:
+        count = len(cnts)
     while len(largest) < count and attempts < 10:
         max_size = 0
         for i,c in enumerate(cnts):
@@ -54,11 +56,15 @@ def largest_from_array(cnts, count, seperation):
         #else don't append and delete contour
         cnts = np.delete(cnts,max_index,0)
         attempts += 1
+        if len(cnts) == 0:
+            break
     return largest
 
 def closest_from_array(cnts, area_to_match, count, seperation):
     closest = []
     attempts = 0
+    if len(cnts) < count:
+        count = len(cnts)
     while len(closest) < count and attempts < 10:
         #some large number
         max_area=0xffffffff
@@ -85,22 +91,28 @@ def range_from_array(cnts, rangeXtoY):
             in_range.append(c)
     return in_range
 
-def label_contours(image,cnts,show_sizes=False):
+def label_contours(image,cnts,show_sizes=False,measure=False):
     for i,c in enumerate(cnts):
-        try:
-            contours.label_contour(image, c, i)
-            if show_sizes:
-                size = cv2.contourArea(c)
-                cv2.putText(image, "Size #{0}:{1}".format(i,size),
-                    (10,80+30*i), cv2.FONT_HERSHEY_SIMPLEX,
-                    0.65, (255, 255, 255), 2)
-        except:
-            print("contour not segmented correctly: label {0} skipped".format(i))
+        if measure:
+            bound_contour(image, c, measure)
+        else:
+            try:
+                contours.label_contour(image, c, i)
+                if show_sizes:
+                    size = cv2.contourArea(c)
+                    cv2.putText(image, "Size #{0}:{1}".format(i,size),
+                        (10,80+30*i), cv2.FONT_HERSHEY_SIMPLEX,
+                        0.65, (255, 255, 255), 2)
+            except:
+                print("contour not segmented correctly: label {0} skipped".format(i))
     return image
 
-def bound_contour(image, contour):
+def bound_contour(image, contour, measure=False):
     x,y,w,h = cv2.boundingRect(contour)
     cv2.rectangle(image, (x,y), (x+w,y+h), (0,255,0),2)
+
+    if measure == False:
+        return image, 0, 0
 
     # unpack the ordered bounding box, then compute the midpoint
     # between the top-left and top-right coordinates, followed by
@@ -164,7 +176,7 @@ def measure_contours(image,cnts, bounding_box=False, measure_dist=False):
     if bounding_box:
         measY = []
         for i,c in enumerate(cnts):
-            image, dY, dX = bound_contour(image, c)
+            image, dY, dX = bound_contour(image, c, measure_dist)
             measY.append(dY)
         
         if measure_dist:
@@ -252,6 +264,8 @@ def cmdline_args():
                     help="Resolution can be max, high, medium, or low.")
     p.add_argument("--show-all","-a", action="store_true", default=False,
                     help="Show all contours in processed image output")
+    p.add_argument("--label","-lb", action="store_true", default=False,
+                    help="Label contours with thicker lines and number them")
     p.add_argument("--show-size","-s", action="store_true", default=False,
                     help="Show sizes of detected contours")
     p.add_argument("--detect-count","-N", type=int, default=1,
@@ -391,18 +405,21 @@ if __name__ == '__main__':
         if len(cnts) != 0:
             if detection_type == "Largest":
                 largest = largest_from_array(cnts,detect_count, seperation)
-                out = label_contours(out,largest, args.show_size)
+                if args.label:
+                    out = label_contours(out,largest, args.show_size, measure)
                 out,_ = measure_contours(out,largest, bound, measure)
 
             if detection_type == "Closest": 
                 closest = closest_from_array(cnts, detect_closest, detect_count, seperation)
-                out = label_contours(out,closest, args.show_size)
+                if args.label:
+                    out = label_contours(out,closest, args.show_size, measure)
                 out,dY = measure_contours(out,closest, bound, measure)
 
             if detection_type == "Range":
                 in_range = range_from_array(cnts, detect_range)
                 largest_in_range = largest_from_array(in_range,detect_count, seperation)
-                out = label_contours(out, largest_in_range, args.show_size)
+                if args.label:
+                    out = label_contours(out, largest_in_range, args.show_size, measure)
                 out,_ = measure_contours(out,largest_in_range, bound, measure)
 
         h,w,_ = out.shape
