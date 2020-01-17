@@ -333,7 +333,9 @@ if __name__ == '__main__':
     if args.use_laptop == False:
         cam = cv2.VideoCapture(gstreamer_pipeline(flip_method=2,display_width=res[0],display_height=res[1]), cv2.CAP_GSTREAMER)
     else:
-        cam = cv2.VideoCapture(0)
+        cam = cv2.VideoCapture(1) 
+        if cam is None or not cam.isOpened():
+            cam = cv2.VideoCapture(0)
 
     measure = settings["measure"] == True or args.measure_from_lens == True
     if measure:
